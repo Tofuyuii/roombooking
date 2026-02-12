@@ -1,11 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>roombooking</title>
+  <meta charset="UTF-8">
+  <title>Room Booking</title>
+  <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
 </head>
+
 <body>
-    
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">Roombooking</div>
+
+  <div class="nav-links">
+    <a href="history.html">history</a>
+    <a href="admin.html" id="adminLink" style="display:none;">admin</a>
+  </div>
+
+  <div class="login-inline">
+    <input type="text" id="username" placeholder="Email (@sriracha.ac.th)">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
+    <button onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <button onclick="bookRoom('สุพรรณิกา')">สุพรรณิกา</button>
+    <button onclick="bookRoom('ปาริชาติ')">ปาริชาต</button>
+    <button onclick="bookRoom('พุทธรักษา')">พุทธรักษา</button>
+    <button onclick="bookRoom('ศูนย์ภาษา')">ศูนย์ภาษา</button>
+    <button onclick="bookRoom('ลีลาวดี')">ลีลาวดี</button>
+    <button onclick="bookRoom('คลินิกเสมารักษ์')">คลินิกเสมารักษ์</button>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-area">
+
+    <!-- BUILDINGS -->
+    <div class="building" id="roomสุพรรณิกา">สุพรรณิกา</div>
+    <div class="building" id="roomศูนย์ภาษา">ศูนย์ภาษา</div>
+    <div class="building" id="roomพุทธรักษา">พุทธรักษา</div>
+    <div class="building" id="roomลีลาวดี">ลีลาวดี</div>
+    <div class="building" id="roomปาริชาติ">ปาริชาต</div>
+    <div class="building" id="roomคลินิกเสมารักษ์">คลินิกเสมารักษ์</div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+      <div><span class="dot green"></span> ห้องว่าง</div>
+      <div><span class="dot yellow"></span> รอดำเนินการ</div>
+      <div><span class="dot red"></span> ถูกจองแล้ว</div>
+      <div><span class="dot blue"></span> คุณจอง</div>
+      <div><span class="dot gray"></span> จองไม่ได้</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+<!-- Popup Booking -->
+<div id="bookingPopup" class="popup">
+  <div class="popup-box">
+    <h2 id="popupRoomName">จองห้อง</h2>
+
+    <label>เลือกวันที่:</label>
+    <input type="date" id="bookingDate" />
+
+    <label>ชื่ออาจารย์ผู้ใช้ห้อง:</label>
+    <input type="text" id="teacherName" placeholder="เช่น อ.สมชาย" />
+
+    <!-- Summary -->
+    <div id="bookingSummary" style="margin-top:15px; font-weight:bold;"></div>
+
+    <div class="popup-buttons">
+      <button onclick="confirmBooking()">ยืนยัน</button>
+      <button onclick="closePopup()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
