@@ -142,12 +142,18 @@ function closePopup() {
 // ===============================
 // ===== CONFIRM BOOKING =====
 // ===============================
+// ===== CONFIRM BOOKING =====
 async function confirmBooking() {
   let date = document.getElementById("bookingDate").value;
   let teacher = document.getElementById("teacherName").value;
 
-  if (!date || !teacher) {
-    alert("กรอกข้อมูลให้ครบก่อน");
+  if (!date) {
+    alert("กรุณาเลือกวันที่ก่อน");
+    return;
+  }
+
+  if (!teacher) {
+    alert("กรุณากรอกชื่ออาจารย์ก่อน");
     return;
   }
 
@@ -160,15 +166,16 @@ async function confirmBooking() {
       status: "pending"
     });
 
-    alert("✅ ส่งคำขอจองแล้ว! รอแอดมินอนุมัติ");
-
+    alert("ส่งคำขอจองแล้ว!");
     closePopup();
     loadBookings();
+
   } catch (err) {
-    alert("❌ ส่งไม่สำเร็จ: " + err.message);
+    alert("ส่งไม่สำเร็จ: " + err.message);
     console.log(err);
   }
 }
+
 
 // ===============================
 // ===== RESET =====
