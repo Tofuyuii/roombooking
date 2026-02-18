@@ -10,7 +10,7 @@ import {
 
 const db = window.db;
 
-let currentUser = null;
+let currentUser = localStorage.getItem("currentUser");
 let selectedRoom = null;
 
 /* ---------- ROOM STATUS ---------- */
@@ -153,15 +153,28 @@ async function confirmBooking() {
     return;
   }
 
-  await addDoc(collection(db, "bookings"), {
-    room: selectedRoom,
-    user: currentUser,
-    date: date,
-    teacher: teacher,
-    status: "pending"
-  });
+async function confirmBooking() {
+  let date = document.getElementById("bookingDate").value;
+  let teacher = document.getElementById("teacherName").value;
 
-  alert("ส่งคำขอจองแล้ว!");
+  try {
+    await addDoc(collection(db, "bookings"), {
+      room: selectedRoom,
+      user: currentUser,
+      date: date,
+      teacher: teacher,
+      status: "pending"
+    });
+
+    alert("ส่งคำขอจองแล้ว!");
+    closePopup();
+    loadBookings();
+
+  } catch (err) {
+    alert("ส่งไม่สำเร็จ: " + err.message);
+    console.log(err);
+  }
+}
 
   closePopup();
   loadBookings();
