@@ -6,8 +6,27 @@
   <link rel="stylesheet" href="style.css">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit&family=Prompt&display=swap" rel="stylesheet">
+
+  <!-- Firebase Setup -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAp0UX1vGtoKOvDhX07H7e14nMyJkDtrzM",
+      authDomain: "src-roombooking.firebaseapp.com",
+      projectId: "src-roombooking",
+      storageBucket: "src-roombooking.firebasestorage.app",
+      messagingSenderId: "977451751508",
+      appId: "1:977451751508:web:23a0ba2ce6f41f6222b5c1",
+      measurementId: "G-5PJ6D4HMGV"
+    };
+
+    window.app = initializeApp(firebaseConfig);
+    window.db = getFirestore(window.app);
+  </script>
 
 </head>
 
@@ -68,8 +87,6 @@
   </div>
 </div>
 
-<script src="script.js"></script>
-
 <!-- Popup Booking -->
 <div id="bookingPopup" class="popup">
   <div class="popup-box">
@@ -81,7 +98,6 @@
     <label>ชื่ออาจารย์ผู้ใช้ห้อง:</label>
     <input type="text" id="teacherName" placeholder="เช่น อ.สมชาย" />
 
-    <!-- Summary -->
     <div id="bookingSummary" style="margin-top:15px; font-weight:bold;"></div>
 
     <div class="popup-buttons">
@@ -90,6 +106,9 @@
     </div>
   </div>
 </div>
+
+<!-- Script -->
+<script type="module" src="script.js"></script>
 
 </body>
 </html>

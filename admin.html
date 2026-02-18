@@ -5,15 +5,29 @@
   <title>Admin Panel</title>
   <link rel="stylesheet" href="style.css">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <!-- Firebase Setup -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAp0UX1vGtoKOvDhX07H7e14nMyJkDtrzM",
+      authDomain: "src-roombooking.firebaseapp.com",
+      projectId: "src-roombooking",
+      storageBucket: "src-roombooking.firebasestorage.app",
+      messagingSenderId: "977451751508",
+      appId: "1:977451751508:web:23a0ba2ce6f41f6222b5c1",
+      measurementId: "G-5PJ6D4HMGV"
+    };
+
+    window.app = initializeApp(firebaseConfig);
+    window.db = getFirestore(window.app);
+  </script>
 
 </head>
 
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">Roombooking</div>
 
@@ -23,17 +37,14 @@
   </div>
 </div>
 
-<!-- CONTENT -->
 <div class="page-box">
-
   <h1 class="page-title">🛠️ Admin Approval Panel</h1>
   <p class="subtitle">รายการจองที่รออนุมัติ</p>
 
   <div id="pendingList" class="admin-container"></div>
-
 </div>
 
-<script src="admin.js"></script>
+<script type="module" src="admin.js"></script>
 
 </body>
 </html>

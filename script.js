@@ -1,3 +1,15 @@
+// ===== Firebase Firestore Import =====
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+const db = window.db;
+
 let currentUser = null;
 let selectedRoom = null;
 
@@ -11,7 +23,23 @@ let rooms = JSON.parse(localStorage.getItem("rooms")) || {
   "คลินิกเสมารักษ์": "disabled"
 };
 
-let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+let bookings = [];
+
+/* ---------- LOAD BOOKINGS FROM FIREBASE ---------- */
+async function loadBookings() {
+  bookings = [];
+
+  const querySnapshot = await getDocs(collection(db, "bookings"));
+
+  querySnapshot.forEach((docSnap) => {
+    bookings.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+  });
+
+  renderRooms();
+}
 
 /* ---------- LOGIN SYSTEM ---------- */
 function login() {
@@ -23,7 +51,6 @@ function login() {
     return;
   }
 
-  // USER LOGIN
   if (email === "user@sriracha.ac.th" && password === "1234") {
     currentUser = email;
     alert("Login สำเร็จ (ผู้ใช้ทั่วไป)");
@@ -35,7 +62,6 @@ function login() {
     return;
   }
 
-  // ADMIN LOGIN
   if (email === "admin@sriracha.ac.th" && password === "123") {
     currentUser = email;
     alert("Login สำเร็จ (แอดมิน)");
@@ -82,11 +108,6 @@ function bookRoom(room) {
     return;
   }
 
-  if (rooms[room] === "booked") {
-    alert("ห้องนี้ถูกจองแล้ว");
-    return;
-  }
-
   selectedRoom = room;
   highlightRoom(room);
 
@@ -118,7 +139,7 @@ document.addEventListener("input", () => {
 });
 
 /* ---------- CONFIRM BOOKING ---------- */
-function confirmBooking() {
+async function confirmBooking() {
   let date = document.getElementById("bookingDate").value;
   let teacher = document.getElementById("teacherName").value;
 
@@ -132,11 +153,7 @@ function confirmBooking() {
     return;
   }
 
-  if (!confirm(`ยืนยันการจอง?\n\nห้อง: ${selectedRoom}\nวันที่: ${date}\nอาจารย์: ${teacher}`)) {
-    return;
-  }
-
-  bookings.push({
+  await addDoc(collection(db, "bookings"), {
     room: selectedRoom,
     user: currentUser,
     date: date,
@@ -144,13 +161,10 @@ function confirmBooking() {
     status: "pending"
   });
 
-  rooms[selectedRoom] = "pending";
-
-  alert("ส่งคำขอจองแล้ว! (รอดำเนินการ)");
+  alert("ส่งคำขอจองแล้ว!");
 
   closePopup();
-  saveData();
-  renderRooms();
+  loadBookings();
 }
 
 /* ---------- RENDER ROOM COLORS ---------- */
@@ -159,14 +173,14 @@ function renderRooms() {
     let el = document.getElementById("room" + room);
     if (!el) return;
 
-    let status = rooms[room];
-
-    if (status === "free") el.style.background = "green";
-    if (status === "pending") el.style.background = "gold";
-    if (status === "booked") el.style.background = "red";
-    if (status === "disabled") el.style.background = "gray";
+    el.style.background = "green";
 
     bookings.forEach(b => {
+      if (b.room === room) {
+        if (b.status === "pending") el.style.background = "gold";
+        if (b.status === "approved") el.style.background = "red";
+      }
+
       if (b.room === room && b.user === currentUser) {
         el.style.background = "dodgerblue";
       }
@@ -174,22 +188,48 @@ function renderRooms() {
 
     el.onclick = () => bookRoom(room);
   });
-
-  saveData();
-}
-
-/* ---------- SAVE ---------- */
-function saveData() {
-  localStorage.setItem("rooms", JSON.stringify(rooms));
-  localStorage.setItem("bookings", JSON.stringify(bookings));
 }
 
 /* ---------- RESET ---------- */
-function resetAll() {
-  localStorage.clear();
-  alert("รีเซ็ตข้อมูลแล้ว");
-  location.reload();
+async function resetAll() {
+
+  if (!confirm("แน่ใจนะว่าจะลบข้อมูลการจองทั้งหมด?")) return;
+
+  // 🔥 ลบ bookings ใน Firestore
+  const querySnapshot = await getDocs(collection(db, "bookings"));
+
+  for (const d of querySnapshot.docs) {
+    await deleteDoc(doc(db, "bookings", d.id));
+  }
+
+  // ✅ รีเซ็ต rooms กลับเป็น free
+  rooms = {
+    "สุพรรณิกา": "free",
+    "ปาริชาต": "free",
+    "พุทธรักษา": "free",
+    "ศูนย์ภาษา": "free",
+    "ลีลาวดี": "free",
+    "คลินิกเสมารักษ์": "disabled"
+  };
+
+  // เซฟ rooms ใหม่ลง localStorage
+  localStorage.setItem("rooms", JSON.stringify(rooms));
+
+  alert("รีเซ็ตข้อมูลทั้งหมดแล้ว!");
+
+  // โหลด bookings ใหม่ (จะว่าง)
+  loadBookings();
 }
 
+
+
 /* ---------- START ---------- */
-renderRooms();
+loadBookings();
+
+// ===== FIX: Export functions to HTML onclick =====
+window.login = login;
+window.logout = logout;
+window.bookRoom = bookRoom;
+window.confirmBooking = confirmBooking;
+window.closePopup = closePopup;
+window.resetAll = resetAll;

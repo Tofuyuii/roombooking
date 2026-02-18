@@ -1,9 +1,27 @@
-let rooms = JSON.parse(localStorage.getItem("rooms")) || {};
-let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-function renderPending() {
+const db = window.db;
+let bookings = [];
+
+async function renderPending() {
   let list = document.getElementById("pendingList");
   list.innerHTML = "";
+
+  bookings = [];
+
+  const querySnapshot = await getDocs(collection(db, "bookings"));
+
+  querySnapshot.forEach((docSnap) => {
+    bookings.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+  });
 
   let pendingBookings = bookings.filter(b => b.status === "pending");
 
@@ -12,9 +30,8 @@ function renderPending() {
     return;
   }
 
-  pendingBookings.forEach((b, index) => {
+  pendingBookings.forEach((b) => {
     let div = document.createElement("div");
-
     div.className = "admin-card";
 
     div.innerHTML = `
@@ -23,7 +40,7 @@ function renderPending() {
       <p>👨‍🏫 อาจารย์: <b>${b.teacher}</b></p>
       <p>🙍 ผู้จอง: <b>${b.user}</b></p>
 
-      <button class="approve-btn" onclick="approve(${index})">
+      <button class="approve-btn" onclick="approve('${b.id}')">
         ✅ อนุมัติ
       </button>
     `;
@@ -32,15 +49,15 @@ function renderPending() {
   });
 }
 
-function approve(index) {
-  bookings[index].status = "approved";
-  rooms[bookings[index].room] = "booked";
-
-  localStorage.setItem("rooms", JSON.stringify(rooms));
-  localStorage.setItem("bookings", JSON.stringify(bookings));
+async function approve(id) {
+  await updateDoc(doc(db, "bookings", id), {
+    status: "approved"
+  });
 
   alert("อนุมัติแล้ว!");
   renderPending();
 }
 
 window.onload = renderPending;
+// ===== FIX: make approve callable from HTML =====
+window.approve = approve;

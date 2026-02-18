@@ -5,16 +5,29 @@
   <title>History</title>
   <link rel="stylesheet" href="style.css">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Prompt:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <!-- Firebase Setup -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    const firebaseConfig = {
+      apiKey: "AIzaSyAp0UX1vGtoKOvDhX07H7e14nMyJkDtrzM",
+      authDomain: "src-roombooking.firebaseapp.com",
+      projectId: "src-roombooking",
+      storageBucket: "src-roombooking.firebasestorage.app",
+      messagingSenderId: "977451751508",
+      appId: "1:977451751508:web:23a0ba2ce6f41f6222b5c1",
+      measurementId: "G-5PJ6D4HMGV"
+    };
+
+    window.app = initializeApp(firebaseConfig);
+    window.db = getFirestore(window.app);
+  </script>
 
 </head>
 
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">Roombooking</div>
 
@@ -24,37 +37,52 @@
   </div>
 </div>
 
-<!-- CONTENT -->
 <div class="page-box">
-
   <h1 class="page-title">📜 ประวัติการจองของคุณ</h1>
-
   <div id="historyList" class="history-container"></div>
-
 </div>
 
-<script>
-  let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
-  let currentUser = localStorage.getItem("currentUser");
+<script type="module">
+  import {
+    collection,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  const db = window.db;
+  let currentUser = localStorage.getItem("currentUser");
   let box = document.getElementById("historyList");
 
-  let myBookings = bookings.filter(b => b.user === currentUser);
+  async function loadHistory() {
+    box.innerHTML = "";
 
-  if (myBookings.length === 0) {
-    box.innerHTML = `<p class="empty-text">ยังไม่มีประวัติการจองของคุณ</p>`;
-  } else {
-    myBookings.forEach(b => {
-      box.innerHTML += `
-        <div class="history-card">
-          <h2>🏫 ห้อง: ${b.room}</h2>
-          <p>📅 วันที่: <b>${b.date}</b></p>
-          <p>👨‍🏫 อาจารย์: <b>${b.teacher}</b></p>
-          <p>📌 สถานะ: <span class="status ${b.status}">${b.status}</span></p>
-        </div>
-      `;
+    const querySnapshot = await getDocs(collection(db, "bookings"));
+
+    let myBookings = [];
+
+    querySnapshot.forEach((docSnap) => {
+      let data = docSnap.data();
+      if (data.user === currentUser) {
+        myBookings.push(data);
+      }
     });
+
+    if (myBookings.length === 0) {
+      box.innerHTML = `<p class="empty-text">ยังไม่มีประวัติการจองของคุณ</p>`;
+    } else {
+      myBookings.forEach(b => {
+        box.innerHTML += `
+          <div class="history-card">
+            <h2>🏫 ห้อง: ${b.room}</h2>
+            <p>📅 วันที่: <b>${b.date}</b></p>
+            <p>👨‍🏫 อาจารย์: <b>${b.teacher}</b></p>
+            <p>📌 สถานะ: <span class="status">${b.status}</span></p>
+          </div>
+        `;
+      });
+    }
   }
+
+  loadHistory();
 </script>
 
 </body>
