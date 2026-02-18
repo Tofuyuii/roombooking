@@ -1,5 +1,8 @@
-// ===== Firebase Firestore Import =====
+// ===== Firebase Setup (ต้องอยู่ในไฟล์นี้เลย) =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
 import {
+  getFirestore,
   collection,
   addDoc,
   getDocs,
@@ -7,14 +10,28 @@ import {
   doc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// ===== Firebase Config =====
+const firebaseConfig = {
+  apiKey: "AIzaSyAp0UX1vGtoKOvDhX07H7e14nMyJkDtrzM",
+  authDomain: "src-roombooking.firebaseapp.com",
+  projectId: "src-roombooking",
+  storageBucket: "src-roombooking.firebasestorage.app",
+  messagingSenderId: "977451751508",
+  appId: "1:977451751508:web:23a0ba2ce6f41f6222b5c1",
+  measurementId: "G-5PJ6D4HMGV"
+};
 
-const db = window.db;
+// ✅ Firebase พร้อมแน่นอนทุกเครื่อง
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
+// ===== GLOBAL =====
 let currentUser = localStorage.getItem("currentUser");
 let selectedRoom = null;
+let bookings = [];
 
-/* ---------- ROOM STATUS ---------- */
-let rooms = JSON.parse(localStorage.getItem("rooms")) || {
+// ===== ROOM STATUS เดิมของเธอ =====
+let rooms = {
   "สุพรรณิกา": "free",
   "ปาริชาต": "free",
   "พุทธรักษา": "free",
@@ -23,15 +40,16 @@ let rooms = JSON.parse(localStorage.getItem("rooms")) || {
   "คลินิกเสมารักษ์": "disabled"
 };
 
-let bookings = [];
+// ===== DOM =====
+const roomElements = document.querySelectorAll(".building");
 
-/* ---------- LOAD BOOKINGS FROM FIREBASE ---------- */
+// ===== LOAD BOOKINGS FROM FIREBASE =====
 async function loadBookings() {
   bookings = [];
 
-  const querySnapshot = await getDocs(collection(db, "bookings"));
+  const snapshot = await getDocs(collection(db, "bookings"));
 
-  querySnapshot.forEach((docSnap) => {
+  snapshot.forEach((docSnap) => {
     bookings.push({
       id: docSnap.id,
       ...docSnap.data()
@@ -41,52 +59,7 @@ async function loadBookings() {
   renderRooms();
 }
 
-/* ---------- LOGIN SYSTEM ---------- */
-function login() {
-  let email = document.getElementById("username").value;
-  let password = document.getElementById("password").value;
-
-  if (email === "" || password === "") {
-    alert("กรอก email และ password ก่อน");
-    return;
-  }
-
-  if (email === "user@sriracha.ac.th" && password === "1234") {
-    currentUser = email;
-    alert("Login สำเร็จ (ผู้ใช้ทั่วไป)");
-
-    document.getElementById("adminLink").style.display = "none";
-    localStorage.setItem("currentUser", currentUser);
-
-    renderRooms();
-    return;
-  }
-
-  if (email === "admin@sriracha.ac.th" && password === "123") {
-    currentUser = email;
-    alert("Login สำเร็จ (แอดมิน)");
-
-    document.getElementById("adminLink").style.display = "inline";
-    localStorage.setItem("currentUser", currentUser);
-
-    renderRooms();
-    return;
-  }
-
-  alert("Email หรือ Password ไม่ถูกต้อง");
-}
-
-function logout() {
-  currentUser = null;
-  alert("Logout แล้ว");
-
-  document.getElementById("adminLink").style.display = "none";
-  localStorage.removeItem("currentUser");
-
-  renderRooms();
-}
-
-/* ---------- HIGHLIGHT BUILDING ---------- */
+// ===== HIGHLIGHT BUILDING =====
 function highlightRoom(room) {
   document.querySelectorAll(".building").forEach(b => {
     b.classList.remove("selected");
@@ -96,8 +69,9 @@ function highlightRoom(room) {
   if (el) el.classList.add("selected");
 }
 
-/* ---------- OPEN POPUP ---------- */
+// ===== OPEN POPUP =====
 function bookRoom(room) {
+
   if (!currentUser) {
     alert("ต้อง Login ก่อนถึงจะจองได้");
     return;
@@ -125,7 +99,7 @@ function closePopup() {
   document.getElementById("bookingPopup").style.display = "none";
 }
 
-/* ---------- LIVE SUMMARY ---------- */
+// ===== LIVE SUMMARY เดิม =====
 document.addEventListener("input", () => {
   let date = document.getElementById("bookingDate").value;
   let teacher = document.getElementById("teacherName").value;
@@ -138,8 +112,9 @@ document.addEventListener("input", () => {
   }
 });
 
-/* ---------- CONFIRM BOOKING ---------- */
+// ===== CONFIRM BOOKING =====
 async function confirmBooking() {
+
   let date = document.getElementById("bookingDate").value;
   let teacher = document.getElementById("teacherName").value;
 
@@ -153,20 +128,21 @@ async function confirmBooking() {
     return;
   }
 
-async function confirmBooking() {
-  let date = document.getElementById("bookingDate").value;
-  let teacher = document.getElementById("teacherName").value;
+  if (!confirm(
+    `ยืนยันการจอง?\n\nห้อง: ${selectedRoom}\nวันที่: ${date}\nอาจารย์: ${teacher}`
+  )) return;
 
   try {
     await addDoc(collection(db, "bookings"), {
       room: selectedRoom,
       user: currentUser,
-      date: date,
-      teacher: teacher,
+      date,
+      teacher,
       status: "pending"
     });
 
-    alert("ส่งคำขอจองแล้ว!");
+    alert("ส่งคำขอจองแล้ว! (รอดำเนินการ)");
+
     closePopup();
     loadBookings();
 
@@ -176,70 +152,113 @@ async function confirmBooking() {
   }
 }
 
-  closePopup();
-  loadBookings();
-}
-
-/* ---------- RENDER ROOM COLORS ---------- */
+// ===== RENDER ROOM COLORS =====
 function renderRooms() {
+
   Object.keys(rooms).forEach(room => {
+
     let el = document.getElementById("room" + room);
     if (!el) return;
 
+    // disabled
+    if (rooms[room] === "disabled") {
+      el.style.background = "gray";
+      return;
+    }
+
+    // default free
     el.style.background = "green";
 
-    bookings.forEach(b => {
-      if (b.room === room) {
-        if (b.status === "pending") el.style.background = "gold";
-        if (b.status === "approved") el.style.background = "red";
+    // check bookings in Firebase
+    bookings.forEach((b) => {
+
+      if (b.room === room && b.status === "pending") {
+        el.style.background = "gold";
       }
 
+      if (b.room === room && b.status === "approved") {
+        el.style.background = "red";
+      }
+
+      // ✅ สีฟ้า = คุณจอง
       if (b.room === room && b.user === currentUser) {
         el.style.background = "dodgerblue";
       }
+
     });
 
     el.onclick = () => bookRoom(room);
   });
 }
 
-/* ---------- RESET ---------- */
+// ===== LOGIN SYSTEM =====
+function login() {
+
+  let email = document.getElementById("username").value;
+  let password = document.getElementById("password").value;
+
+  if (email === "" || password === "") {
+    alert("กรอก email และ password ก่อน");
+    return;
+  }
+
+  // USER LOGIN
+  if (email === "user@sriracha.ac.th" && password === "1234") {
+    currentUser = email;
+    alert("Login สำเร็จ (ผู้ใช้ทั่วไป)");
+
+    document.getElementById("adminLink").style.display = "none";
+    localStorage.setItem("currentUser", currentUser);
+
+    loadBookings();
+    return;
+  }
+
+  // ADMIN LOGIN
+  if (email === "admin@sriracha.ac.th" && password === "123") {
+    currentUser = email;
+    alert("Login สำเร็จ (แอดมิน)");
+
+    document.getElementById("adminLink").style.display = "inline";
+    localStorage.setItem("currentUser", currentUser);
+
+    loadBookings();
+    return;
+  }
+
+  alert("Email หรือ Password ไม่ถูกต้อง");
+}
+
+function logout() {
+  currentUser = null;
+  alert("Logout แล้ว");
+
+  document.getElementById("adminLink").style.display = "none";
+  localStorage.removeItem("currentUser");
+
+  loadBookings();
+}
+
+// ===== RESET =====
 async function resetAll() {
 
   if (!confirm("แน่ใจนะว่าจะลบข้อมูลการจองทั้งหมด?")) return;
 
-  // 🔥 ลบ bookings ใน Firestore
-  const querySnapshot = await getDocs(collection(db, "bookings"));
+  const snapshot = await getDocs(collection(db, "bookings"));
 
-  for (const d of querySnapshot.docs) {
+  for (const d of snapshot.docs) {
     await deleteDoc(doc(db, "bookings", d.id));
   }
 
-  // ✅ รีเซ็ต rooms กลับเป็น free
-  rooms = {
-    "สุพรรณิกา": "free",
-    "ปาริชาต": "free",
-    "พุทธรักษา": "free",
-    "ศูนย์ภาษา": "free",
-    "ลีลาวดี": "free",
-    "คลินิกเสมารักษ์": "disabled"
-  };
-
-  // เซฟ rooms ใหม่ลง localStorage
-  localStorage.setItem("rooms", JSON.stringify(rooms));
-
   alert("รีเซ็ตข้อมูลทั้งหมดแล้ว!");
 
-  // โหลด bookings ใหม่ (จะว่าง)
   loadBookings();
 }
 
-
-
-/* ---------- START ---------- */
+// ===== START =====
 loadBookings();
 
-// ===== FIX: Export functions to HTML onclick =====
+// ===== EXPORT FOR HTML =====
 window.login = login;
 window.logout = logout;
 window.bookRoom = bookRoom;
