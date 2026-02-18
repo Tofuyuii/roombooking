@@ -133,6 +133,8 @@ async function confirmBooking() {
   )) return;
 
   try {
+
+    // ✅ ส่งขึ้น Firebase
     await addDoc(collection(db, "bookings"), {
       room: selectedRoom,
       user: currentUser,
@@ -141,55 +143,38 @@ async function confirmBooking() {
       status: "pending"
     });
 
-    alert("ส่งคำขอจองแล้ว! (รอดำเนินการ)");
+    // ✅ แจ้งชัด ๆ ว่าจองแล้ว
+    alert("✅ จองสำเร็จแล้ว!\nตอนนี้รอแอดมินอนุมัติ");
 
+    // ✅ โหลดใหม่ก่อนปิด popup
+    await loadBookings();
+
+    // ✅ ปิด popup ทีหลัง
     closePopup();
-    loadBookings();
 
   } catch (err) {
-    alert("ส่งไม่สำเร็จ: " + err.message);
+    alert("❌ ส่งไม่สำเร็จ: " + err.message);
     console.log(err);
   }
 }
 
+
 // ===== RENDER ROOM COLORS =====
-function renderRooms() {
-
-  Object.keys(rooms).forEach(room => {
-
-    let el = document.getElementById("room" + room);
-    if (!el) return;
-
-    // disabled
-    if (rooms[room] === "disabled") {
-      el.style.background = "gray";
-      return;
-    }
-
-    // default free
-    el.style.background = "green";
-
-    // check bookings in Firebase
-    bookings.forEach((b) => {
-
-      if (b.room === room && b.status === "pending") {
-        el.style.background = "gold";
-      }
-
-      if (b.room === room && b.status === "approved") {
-        el.style.background = "red";
-      }
-
-      // ✅ สีฟ้า = คุณจอง
-      if (b.room === room && b.user === currentUser) {
-        el.style.background = "dodgerblue";
-      }
-
-    });
-
-    el.onclick = () => bookRoom(room);
-  });
+// pending
+if (b.room === room && b.status === "pending") {
+  el.style.background = "gold";
 }
+
+// approved
+if (b.room === room && b.status === "approved") {
+  el.style.background = "red";
+}
+
+// user booking = ฟ้า เฉพาะ pending ของตัวเอง
+if (b.room === room && b.user === currentUser && b.status === "pending") {
+  el.style.background = "dodgerblue";
+}
+
 
 // ===== LOGIN SYSTEM =====
 function login() {
